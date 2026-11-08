@@ -20,7 +20,30 @@ Problems this solves:
 | Urgent fixes waiting for the next release | Hotfix branches off `main` |
 | Fixes lost in the next release | Every hotfix is also merged into `dev` |
 
-## 2. Branches
+## 2. Roles
+
+**The maintainer is `le1douglas`** (GitHub login and git `user.name`).
+
+| Role | Who | Can run |
+| --- | --- | --- |
+| Maintainer | `le1douglas` | everything a feature owner can, plus `release-to-prod`, `create-hotfix` and `merge-hotfix` |
+| Feature owner | whoever created the feature branch | `sync-feature-and-dev` and `merge-feature`, on their own branch only |
+| Anyone | everyone with push access | `create-feature` |
+
+How to check:
+
+```sh
+# Who you are: must print le1douglas to act as maintainer
+git config user.name
+
+# Who owns a feature branch: the author of its commits. Exactly one name, and it must be yours.
+# No commits yet means no owner yet: whoever runs the action takes it.
+git log --format='%an' origin/dev..feature-name | sort -u
+```
+
+`user.name` is set by each person, so this check prevents mistakes, not intent. The real enforcement is the GitHub rulesets in section 6, which only let the maintainer push to `main`, push merge commits to `dev`, and create `v*` tags.
+
+## 3. Branches
 
 | Branch | Lifetime | Branches off | Merges into | Rewritten? | Who pushes |
 | --- | --- | --- | --- | --- | --- |
@@ -36,7 +59,7 @@ Problems this solves:
 
 No commits are made directly on `main` or `dev`. They only change through the actions below.
 
-## 3. Overview
+## 4. Overview
 
 What the history looks like after two releases and a hotfix:
 
@@ -57,29 +80,29 @@ gitGraph
     branch dev order: 2
     commit id: "dev setup"
     branch feature order: 3
-    commit id: "feature 1 #1"
-    commit id: "feature 1 #2"
+    commit id: "feature pt.1"
+    commit id: "feature pt.2"
     checkout dev
-    merge feature id: "merge_feature_into_dev"
+    merge feature id: "--ff-only, rebase*"
     checkout main
-    merge dev id: "merge_dev_into_main" tag: "v1.0.0"
+    merge dev id: "--no-ff, tag" tag: "v1.0.0"
     checkout dev
-    commit id: "introduced bug" type: HIGHLIGHT
+    commit id: "introduced bug†" type: HIGHLIGHT
     checkout main
-    merge dev id: "merge_dev_into_main " tag: "v2.0.0"
+    merge dev id: "--no-ff, tag " tag: "v2.0.0"
     branch hotfix order: 1
     commit id: "fix"
     checkout main
-    merge hotfix id: "merge_hotfix_into_main" tag: "v2.0.1"
+    merge hotfix id: "--no-ff, tag  " tag: "v2.0.1"
     checkout dev
-    merge hotfix id: "merge_hotfix_into_dev"
+    merge hotfix id: "--no-ff"
 ```
 
 > Simplifications in this drawing:
-> - `merge_feature_into_dev` is a fast-forward, so in the real history the feature commits sit directly on `dev` with no merge commit. Mermaid can only draw it as a merge.
-> - The highlighted `introduced bug` commit stands for the work that lands on `dev` between `v1.0.0` and `v2.0.0`, including the bug that the hotfix later fixes. In reality it arrives through feature branches.
+> - \* `--ff-only, rebase` is a fast-forward, so in the real history the feature commits sit directly on `dev` with no merge commit. Mermaid can only draw it as a merge.
+> - † The highlighted `introduced bug` commit stands for the work that lands on `dev` between `v1.0.0` and `v2.0.0`, including the bug that the hotfix later fixes. In reality it arrives through feature branches.
 
-## 4. Actions
+## 5. Actions
 
 Every action and where it goes:
 
@@ -90,20 +113,20 @@ flowchart LR
     feature([feature-*])
     hotfix([hotfix-*])
 
-    dev -->|"create_feature_from_dev"| feature
-    feature -->|"rebase_feature_onto_dev"| feature
-    feature -->|"merge_feature_into_dev (--ff-only)"| dev
-    dev -->|"merge_dev_into_main (--no-ff + tag)"| main
-    main -->|"create_hotfix_from_main"| hotfix
-    hotfix -->|"merge_hotfix_into_main (--no-ff + tag)"| main
-    hotfix -->|"merge_hotfix_into_dev (--no-ff)"| dev
+    dev -->|"create-feature"| feature
+    feature -->|"sync-feature-and-dev"| feature
+    feature -->|"merge-feature (--ff-only)"| dev
+    dev -->|"release-to-prod (--no-ff + tag)"| main
+    main -->|"create-hotfix"| hotfix
+    hotfix -->|"merge-hotfix (--no-ff + tag)"| main
+    hotfix -->|"merge-hotfix (--no-ff)"| dev
 ```
 
-Changes only ever move along these arrows. The hooks in section 5 refuse any merge into a `feature-*` or `hotfix-*` branch.
+Changes only ever move along these arrows. The hooks in section 6 refuse any merge into a `feature-*` or `hotfix-*` branch.
 
 Each action below is the complete list of commands, checks included. Lines marked ⚠ are where a merge conflict can stop you: resolve it, then carry on with the next command.
 
-### create_feature_from_dev
+### create-feature
 
 Anyone.
 
@@ -115,7 +138,7 @@ git push -u origin feature-name
 # work, commit and git push as often as you like
 ```
 
-### rebase_feature_onto_dev
+### sync-feature-and-dev
 
 The feature's owner. Run this before every merge into `dev`, and whenever `dev` has moved on.
 
@@ -139,16 +162,16 @@ after=$(git rev-list --count origin/dev..HEAD)
 git push --force-with-lease --force-if-includes
 ```
 
-### merge_feature_into_dev
+### merge-feature
 
-The feature's owner, right after `rebase_feature_onto_dev`.
+The feature's owner, right after `sync-feature-and-dev`.
 
 ```sh
 git checkout dev
 git pull --ff-only
 git merge --ff-only feature-name
 # No conflicts: a fast-forward never conflicts.
-# If it fails, dev has moved: run rebase_feature_onto_dev again and retry.
+# If it fails, dev has moved: run sync-feature-and-dev again and retry.
 # Ignore Git's hint to use "git merge --no-ff": dev only takes fast-forwards.
 git push origin dev
 # Push rejected? Someone pushed to dev a moment ago. Undo your local merge with
@@ -158,7 +181,7 @@ git branch -d feature-name
 git push origin --delete feature-name
 ```
 
-### release (merge_dev_into_main + tag)
+### release-to-prod
 
 Maintainer only.
 
@@ -177,7 +200,7 @@ git tag -a "$V" -m "Release $V"
 git push --atomic origin main "$V"   # branch and tag together, or neither
 ```
 
-### create_hotfix_from_main
+### create-hotfix
 
 Maintainer only.
 
@@ -189,7 +212,7 @@ git checkout -b hotfix-name
 git push -u origin hotfix-name
 ```
 
-### hotfix (merge_hotfix_into_main + tag + merge_hotfix_into_dev)
+### merge-hotfix
 
 Maintainer only. The steps always run together and in this order: `main` first, so the release is fixed before anything else happens.
 
@@ -225,9 +248,9 @@ git branch -d "$H"
 git push origin --delete "$H"
 ```
 
-Feature branches still in progress pick up the hotfix the next time they run `rebase_feature_onto_dev`.
+Feature branches still in progress pick up the hotfix the next time they run `sync-feature-and-dev`.
 
-## 5. Guardrails
+## 6. Guardrails
 
 ### Git config (everyone, once per clone)
 
@@ -327,7 +350,7 @@ In the repository: **Settings → Rules → Rulesets**. Add the maintainer (or t
 | `protect-tags` | tags `v*` | Restrict creations, Restrict updates, Restrict deletions | maintainer |
 
 - **`protect-main`**: only the maintainer can release.
-- **`protect-dev`**: everyone can push fast-forwards. Only the maintainer can push merge commits, which is what `merge_hotfix_into_dev` needs. Nobody can rewrite or delete `dev`.
+- **`protect-dev`**: everyone can push fast-forwards. Only the maintainer can push merge commits, which is what step 3 of `merge-hotfix` needs. Nobody can rewrite or delete `dev`.
 - **`protect-tags`**: release tags can't be created, moved or deleted by anyone else.
 - Rulesets work on public repositories with a free account. A private repository needs GitHub Pro or Team.
 
@@ -418,14 +441,14 @@ The script is safe to run again: each ruleset is matched by its name and replace
 | Release tag | `vX.Y.0`, annotated | `v4.0.0` |
 | Hotfix tag | `vX.Y.Z`, annotated (patch +1) | `v4.0.1` |
 
-## 6. Remember
+## 7. Remember
 
 What no command, hook or ruleset can enforce:
 
 - **As maintainer, GitHub doesn't stop you.** Your bypass covers force pushes and deletions too. Never force-push `main` or `dev`.
 - **Never move or delete a pushed tag.** If a release is wrong, release a new version.
-- **`dev` must stay releasable.** There is no CI yet: test before every `merge_feature_into_dev`.
+- **`dev` must stay releasable.** There is no CI yet: test before every `merge-feature`.
 - **Only the maintainer can release or hotfix.** If the maintainer is away, both wait.
 - **One owner per feature branch.** Don't commit to someone else's feature branch or branch off it; wait until it is in `dev`.
-- **Set up every new clone.** Git config and `core.hooksPath` are not cloned: run the config block in section 5 on every machine.
+- **Set up every new clone.** Git config and `core.hooksPath` are not cloned: run the config block in section 6 on every machine.
 - **When something goes wrong:** `git merge --abort` or `git rebase --abort` gets you back to the start, and `git reflog` finds commits that seem lost.
