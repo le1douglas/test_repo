@@ -21,6 +21,8 @@ The commands live only in `GIT_STRATEGY.md` at the repository root, in the `Acti
 
 Correct its spelling, grammar and spacing (typos, double spaces, wrong verb forms), but keep its meaning, wording and style otherwise: don't rephrase it, expand it, change its capitalization style or add a trailer. If the message seems to describe something other than the changes, point it out instead of fixing it.
 
+The feature branch, replacing `feature-name`, is the current branch when it is a `feature-…` branch; otherwise ask which feature branch to use.
+
 ## Confirm before committing
 
 After `git status --short` and before `git add -A`, show the user, together in one question:
@@ -29,8 +31,6 @@ After `git status --short` and before `git add -A`, show the user, together in o
 - the final commit message, and the original next to it if you corrected anything.
 
 Run `git add -A` and the rest only once the user confirms. If they change the message, use theirs, corrected the same way, and confirm again.
-
-The feature branch, replacing `feature-name`, is the current branch when it is a `feature-…` branch; otherwise ask which feature branch to use.
 
 ## Running the commands
 
