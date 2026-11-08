@@ -1,2 +1,2 @@
 login form
-login validation
+login validation, then redirect to dashboard
