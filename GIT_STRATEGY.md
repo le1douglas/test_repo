@@ -26,8 +26,8 @@ Problems this solves:
 
 | Role | Who | Can run |
 | --- | --- | --- |
-| Maintainer | `le1douglas` | everything a feature owner can, plus `release-to-prod`, `create-hotfix` and `merge-hotfix` |
-| Feature owner | whoever created the feature branch | `commit-feature`, `sync-feature-and-dev` and `merge-feature`, on their own branch only |
+| Maintainer | `le1douglas` | everything a feature owner can, plus `release-to-prod`, `create-hotfix`, `merge-hotfix` and `commit` on hotfix branches |
+| Feature owner | whoever created the feature branch | `commit`, `sync-feature-and-dev` and `merge-feature`, on their own branch only |
 | Anyone | everyone with push access | `create-feature` |
 
 How to check:
@@ -114,11 +114,12 @@ flowchart LR
     hotfix([hotfix-*])
 
     dev -->|"create-feature"| feature
-    feature -->|"commit-feature"| feature
+    feature -->|"commit"| feature
     feature -->|"sync-feature-and-dev"| feature
     feature -->|"merge-feature (--ff-only)"| dev
     dev -->|"release-to-prod (--no-ff + tag)"| main
     main -->|"create-hotfix"| hotfix
+    hotfix -->|"commit"| hotfix
     hotfix -->|"merge-hotfix (--no-ff + tag)"| main
     hotfix -->|"merge-hotfix (--no-ff)"| dev
 ```
@@ -136,22 +137,24 @@ git checkout dev
 git pull --ff-only
 git checkout -b feature-name
 git push -u origin feature-name
-# work, then run commit-feature as often as you like
+# work, then run commit as often as you like
 ```
 
-### commit-feature
+### commit
 
-The feature's owner. Saves all your current changes on the feature branch and pushes them.
+On a feature branch, the feature's owner. On a hotfix branch, the maintainer only. Saves all your current changes on that branch and pushes them.
 
 ```sh
+B=feature-name                # the branch: a feature-* or a hotfix-* branch
 M="commit message"            # what this commit does
 
-git checkout feature-name
+git checkout "$B"
 git status --short            # everything listed here is committed: new, changed and deleted files
 git add -A
 git commit -m "$M"
 git push
-# Push rejected? You rebased without pushing. Run sync-feature-and-dev, which force-pushes safely.
+# Push rejected on a feature branch? You rebased without pushing.
+#   Run sync-feature-and-dev, which force-pushes safely.
 ```
 
 ### sync-feature-and-dev
@@ -223,8 +226,8 @@ Maintainer only.
 git checkout main
 git pull --ff-only
 git checkout -b hotfix-name
-# fix and commit
 git push -u origin hotfix-name
+# fix, then run commit
 ```
 
 ### merge-hotfix
