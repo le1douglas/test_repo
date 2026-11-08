@@ -17,7 +17,18 @@ The commands live only in `GIT_STRATEGY.md` at the repository root, in the `Acti
 
 ## Arguments
 
-`$ARGUMENTS` is the commit message, replacing `commit message` in `M=`. Use it as written, without rewording it or adding a trailer. If no message was given, ask for one.
+`$ARGUMENTS` is the commit message, replacing `commit message` in `M=`. If no message was given, ask for one.
+
+Correct its spelling, grammar and spacing (typos, double spaces, wrong verb forms), but keep its meaning, wording and style otherwise: don't rephrase it, expand it, change its capitalization style or add a trailer. If the message seems to describe something other than the changes, point it out instead of fixing it.
+
+## Confirm before committing
+
+After `git status --short` and before `git add -A`, show the user, together in one question:
+
+- the files that will be committed, from `git status --short`;
+- the final commit message, and the original next to it if you corrected anything.
+
+Run `git add -A` and the rest only once the user confirms. If they change the message, use theirs, corrected the same way, and confirm again.
 
 The feature branch, replacing `feature-name`, is the current branch when it is a `feature-…` branch; otherwise ask which feature branch to use.
 
@@ -26,7 +37,7 @@ The feature branch, replacing `feature-name`, is the current branch when it is a
 - Run the commands in a POSIX shell (Git Bash on Windows), in the order written, substituting the arguments above for the placeholders.
 - Do not add, skip, reorder or change any command. Never add `--no-verify` or `--force` beyond what the guide writes.
 - Comments in the snippet are instructions. Follow them:
-  - `git status --short`: show the user the list of files and stop if it is empty (there is nothing to commit). If it lists something that looks unintended, such as secrets, build output or large files, point it out and continue only once the user agrees.
+  - `git status --short`: stop if the list is empty (there is nothing to commit). Otherwise show it in the confirmation above, and if it lists something that looks unintended, such as secrets, build output or large files, point it out there.
   - `⚠ CONFLICT`: stop, show the user the conflicting files, resolve them together as the comment describes, and continue only once the user agrees with the resolution.
   - A check that prints `STOP`: halt and report. Do not continue.
   - `# run the tests`: run the project's tests if it has any; otherwise ask the user to confirm they tested.
