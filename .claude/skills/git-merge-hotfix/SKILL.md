@@ -30,4 +30,14 @@ The commands live only in `GIT_STRATEGY.md` at the repository root, in the `Acti
   - A comment describing the user's own work (for example `# fix and commit` or `# work, commit…`): stop there and hand back to the user.
 - If a command fails, stop and show the error. Use the recovery the guide's comments describe only with the user's go-ahead.
 
+## Afterwards: offer to sync feature branches
+
+Only once every step of `merge-hotfix` has finished, including the clean-up, look at the local feature branches (`git branch --list 'feature-*'`). If there are none, skip this section.
+
+For each one, check its owner the way the `Roles` section describes. Offer to sync only the branches the user owns, or that have no commits yet; list any others as needing their owner to sync.
+
+Ask the user, in one question, whether to sync the hotfix into those branches now, and which ones. For each branch they pick, run the `sync-feature-and-dev` action: its commands live in `GIT_STRATEGY.md` under `### sync-feature-and-dev`. Read that section and run it with the rules above, including its conflict, `STOP` and test steps. If a sync stops, report it and don't start the next one. If the user says no, just mention that the branches pick up the hotfix the next time they run `sync-feature-and-dev`.
+
+The guide does not require this step: the hotfix reaches feature branches at their next sync anyway. Offering it here is a workflow habit, so work in progress gets the fix right away.
+
 Finish with a short summary of what changed: branches, commits, tags, and what was pushed.
