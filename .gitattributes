@@ -1,0 +1,2 @@
+# Hooks are shell scripts: always check them out with LF line endings
+.githooks/* text eol=lf
