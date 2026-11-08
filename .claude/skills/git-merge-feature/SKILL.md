@@ -19,6 +19,12 @@ The commands live only in `GIT_STRATEGY.md` at the repository root, in the `Acti
 
 `$ARGUMENTS` is the feature branch, replacing `feature-name`. If none was given, use the current branch when it is a `feature-…` branch; otherwise ask.
 
+## Sync first
+
+Once the owner check passes, run the `sync-feature-and-dev` action on the same branch before any `merge-feature` command. Its commands live in `GIT_STRATEGY.md` under `### sync-feature-and-dev`: read that section and run it with the rules below, including its conflict, `STOP` and test steps. Run `merge-feature` only once the sync has finished cleanly; if the sync stops, the merge does not happen.
+
+The guide does not require this: `git merge --ff-only` already refuses a branch that is not on top of `dev`. Syncing first is a workflow habit, so the rebase and tests always come right before the merge.
+
 ## Running the commands
 
 - Run the commands in a POSIX shell (Git Bash on Windows), in the order written, substituting the arguments above for the placeholders.
