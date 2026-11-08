@@ -1,2 +1,2 @@
 theme=dark
-timeout=3
+timeout=30
