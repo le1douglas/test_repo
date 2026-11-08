@@ -57,27 +57,27 @@ gitGraph
     branch dev order: 2
     commit id: "dev setup"
     branch feature order: 3
-    commit id: "feature 1 #1"
-    commit id: "feature 1 #2"
+    commit id: "feature pt.1"
+    commit id: "feature pt.2"
     checkout dev
-    merge feature id: "merge_feature_into_dev"
+    merge feature id: "--ff-only, rebase*"
     checkout main
-    merge dev id: "merge_dev_into_main" tag: "v1.0.0"
+    merge dev id: "--no-ff, tag" tag: "v1.0.0"
     checkout dev
-    commit id: "introduced bug" type: HIGHLIGHT
+    commit id: "introduced bug†" type: HIGHLIGHT
     checkout main
-    merge dev id: "merge_dev_into_main " tag: "v2.0.0"
+    merge dev id: "--no-ff, tag " tag: "v2.0.0"
     branch hotfix order: 1
     commit id: "fix"
     checkout main
-    merge hotfix id: "merge_hotfix_into_main" tag: "v2.0.1"
+    merge hotfix id: "--no-ff, tag  " tag: "v2.0.1"
     checkout dev
-    merge hotfix id: "merge_hotfix_into_dev"
+    merge hotfix id: "--no-ff"
 ```
 
 > Simplifications in this drawing:
-> - `merge_feature_into_dev` is a fast-forward, so in the real history the feature commits sit directly on `dev` with no merge commit. Mermaid can only draw it as a merge.
-> - The highlighted `introduced bug` commit stands for the work that lands on `dev` between `v1.0.0` and `v2.0.0`, including the bug that the hotfix later fixes. In reality it arrives through feature branches.
+> - \* `--ff-only, rebase` is a fast-forward, so in the real history the feature commits sit directly on `dev` with no merge commit. Mermaid can only draw it as a merge.
+> - † The highlighted `introduced bug` commit stands for the work that lands on `dev` between `v1.0.0` and `v2.0.0`, including the bug that the hotfix later fixes. In reality it arrives through feature branches.
 
 ## 4. Actions
 
